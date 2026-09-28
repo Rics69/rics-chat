@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	core_postgres_pool "github.com/Rics69/task-tracker/internal/core/repository/postgres/pool"
+	core_postgres_pool "github.com/Rics69/rics-chat/internal/core/repository/postgres/pool"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -47,7 +47,7 @@ func NewPool(ctx context.Context, config Config) (*Pool, error) {
 func (p *Pool) Query(ctx context.Context, sql string, args ...any) (core_postgres_pool.Rows, error) {
 	rows, err := p.Pool.Query(ctx, sql, args...)
 	if err != nil {
-		return nil, err
+		return nil, MapErrors(err)
 	}
 
 	return pgxRows{rows}, nil
@@ -62,7 +62,7 @@ func (p *Pool) QueryRow(ctx context.Context, sql string, args ...any) core_postg
 func (p *Pool) Exec(ctx context.Context, sql string, arguments ...any) (core_postgres_pool.CommandTag, error) {
 	tag, err := p.Pool.Exec(ctx, sql, arguments...)
 	if err != nil {
-		return nil, err
+		return nil, MapErrors(err)
 	}
 
 	return pgxCommandTag{tag}, nil

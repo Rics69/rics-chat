@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package chat.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/Rics69/rics-chat/pkg/api/chat/v1;chatv1";
+
+// User — публичное представление пользователя.
+message User {
+  int64 id = 1;
+  string login = 2;
+  google.protobuf.Timestamp created_at = 3;
+}

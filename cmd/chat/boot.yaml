@@ -1,0 +1,26 @@
+# Конфиг rk-boot. Любое поле можно переопределить env-переменной:
+# RK_GRPC_0_PORT=9090 -> grpc[0].port
+grpc:
+  - name: rics-chat
+    # gRPC и REST (grpc-gateway) слушают один порт, rk делит трафик через cmux
+    port: 8080
+    enabled: true
+    # reflection — чтобы grpcurl/Postman видели методы без .proto файлов
+    enableReflection: true
+    # rk-опции gateway: все HTTP-заголовки (Authorization, X-Request-ID) уходят в gRPC metadata,
+    # ошибки отдаются в едином json-формате
+    enableRkGwOption: true
+    gwOption:
+      marshal:
+        # json в snake_case как в proto (access_token, created_at), а не accessToken
+        useProtoNames: true
+        # не выкидывать пустые поля (false, 0, "") из ответа
+        emitUnpopulated: true
+    # /rk/v1/ready, /rk/v1/alive, /rk/v1/info
+    commonService:
+      enabled: true
+    # swagger UI на /sw/, json берётся из api/openapi (вшит в бинарь через embed)
+    sw:
+      enabled: true
+      jsonPaths:
+        - "."

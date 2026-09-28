@@ -1,0 +1,21 @@
+version: v2
+# remote-плагины: генерация идёт на стороне BSR (buf.build),
+plugins:
+  # сообщения (*.pb.go)
+  - remote: buf.build/protocolbuffers/go:v1.36.12
+    out: pkg/api
+    opt: paths=source_relative
+  # gRPC сервер/клиент (*_grpc.pb.go)
+  - remote: buf.build/grpc/go:v1.6.2
+    out: pkg/api
+    opt: paths=source_relative
+  # REST -> gRPC прокси (*.pb.gw.go)
+  - remote: buf.build/grpc-ecosystem/gateway:v2.31.0
+    out: pkg/api
+    opt: paths=source_relative
+  # swagger для всех сервисов одним файлом, его раздаёт rk-boot (sw entry)
+  - remote: buf.build/grpc-ecosystem/openapiv2:v2.31.0
+    out: api/openapi
+    opt:
+      - allow_merge=true
+      - merge_file_name=chat

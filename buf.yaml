@@ -1,0 +1,12 @@
+version: v2
+modules:
+  - path: api/proto
+deps:
+  # google/api/annotations.proto — для option (google.api.http)
+  - buf.build/googleapis/googleapis
+lint:
+  use:
+    - STANDARD
+breaking:
+  use:
+    - FILE

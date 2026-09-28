@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package chat.v1;
+
+import "chat/v1/user.proto";
+import "google/api/annotations.proto";
+
+option go_package = "github.com/Rics69/rics-chat/pkg/api/chat/v1;chatv1";
+
+// AuthService — регистрация и вход.
+service AuthService {
+  rpc Register(RegisterRequest) returns (RegisterResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/auth/register"
+      body: "*"
+    };
+  }
+
+  rpc Login(LoginRequest) returns (LoginResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/auth/login"
+      body: "*"
+    };
+  }
+}
+
+message RegisterRequest {
+  string login = 1;
+  string password = 2;
+}
+
+// после регистрации сразу отдаём токен — не нужно отдельно логиниться
+message RegisterResponse {
+  User user = 1;
+  string access_token = 2;
+}
+
+message LoginRequest {
+  string login = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  User user = 1;
+  string access_token = 2;
+}
