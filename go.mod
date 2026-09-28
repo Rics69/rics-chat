@@ -3,6 +3,7 @@ module github.com/Rics69/rics-chat
 go 1.26.5
 
 require (
+	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/uuid v1.6.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.31.0
 	github.com/jackc/pgx/v5 v5.11.0
@@ -11,6 +12,7 @@ require (
 	github.com/rookie-ninja/rk-entry/v2 v2.2.22
 	github.com/rookie-ninja/rk-grpc/v2 v2.2.22
 	go.uber.org/zap v1.28.0
+	golang.org/x/crypto v0.57.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20260921155816-b14227669459
 	google.golang.org/grpc v1.84.0
 	google.golang.org/protobuf v1.36.12

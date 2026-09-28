@@ -37,6 +37,9 @@ func (h *GRPCResponseHandler) ErrorResponse(err error, msg string) error {
 	case errors.Is(err, core_errors.ErrConflict):
 		code = codes.AlreadyExists
 		logFunc = h.log.Warn
+	case errors.Is(err, core_errors.ErrUnauthenticated):
+		code = codes.Unauthenticated
+		logFunc = h.log.Debug
 	default:
 		code = codes.Internal
 		logFunc = h.log.Error

@@ -38,6 +38,7 @@ type pgxCommandTag struct {
 func MapErrors(err error) error {
 	const (
 		pgxViolatesForeignKeyErrorCode = "23503"
+		pgxViolatesUniqueErrorCode     = "23505"
 	)
 
 	if err == nil {
@@ -53,10 +54,10 @@ func MapErrors(err error) error {
 		switch pgErr.Code {
 		case pgxViolatesForeignKeyErrorCode:
 			return fmt.Errorf("%w: %w", err, core_postgres_pool.ErrViolatesForeignKey)
+		case pgxViolatesUniqueErrorCode:
+			return fmt.Errorf("%w: %w", err, core_postgres_pool.ErrViolatesUnique)
 		}
 	}
 
-	// два %w (Go 1.20+): сохраняем и исходную ошибку (например context.DeadlineExceeded),
-	// и нашу метку ErrUnknown — errors.Is сработает для обеих
 	return fmt.Errorf("%w: %w", err, core_postgres_pool.ErrUnknown)
 }

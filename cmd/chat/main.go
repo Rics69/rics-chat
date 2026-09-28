@@ -8,10 +8,13 @@ import (
 	"time"
 
 	"github.com/Rics69/rics-chat/api/openapi"
+	core_jwt "github.com/Rics69/rics-chat/internal/core/auth/jwt"
 	core_config "github.com/Rics69/rics-chat/internal/core/config"
 	core_logger "github.com/Rics69/rics-chat/internal/core/logger"
 	core_pgx_pool "github.com/Rics69/rics-chat/internal/core/repository/postgres/pool/pgx"
 	core_grpc_interceptor "github.com/Rics69/rics-chat/internal/core/transport/grpc/interceptor"
+	auth_postgres_repository "github.com/Rics69/rics-chat/internal/features/auth/repository/postgres"
+	auth_service "github.com/Rics69/rics-chat/internal/features/auth/service"
 	auth_transport_grpc "github.com/Rics69/rics-chat/internal/features/auth/transport/grpc"
 	rkboot "github.com/rookie-ninja/rk-boot/v2"
 	rkentry "github.com/rookie-ninja/rk-entry/v2/entry"
@@ -53,9 +56,13 @@ func main() {
 
 	defer pool.Close()
 
+	tokenManager := core_jwt.NewTokenManager(core_jwt.NewConfigMust())
+
 	logger.Debug("initializing feature", zap.String("feature", "auth"))
 
-	authTransportGRPC := auth_transport_grpc.NewAuthGRPCHandler()
+	authRepository := auth_postgres_repository.NewAuthRepository(pool)
+	authService := auth_service.NewAuthService(authRepository, tokenManager)
+	authTransportGRPC := auth_transport_grpc.NewAuthGRPCHandler(authService)
 
 	logger.Debug("initializing rk-boot")
 
