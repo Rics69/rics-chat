@@ -7,7 +7,13 @@
   "tags": [
     {
       "name": "AuthService",
-      "description": "AuthService — регистрация и вход.\nОба метода публичные (без токена), остальные сервисы будут требовать access_token."
+      "description": "AuthService — регистрация и вход."
+    },
+    {
+      "name": "MessagesService"
+    },
+    {
+      "name": "UsersService"
     }
   ],
   "consumes": [
@@ -80,6 +86,175 @@
           "AuthService"
         ]
       }
+    },
+    "/api/v1/dialogs": {
+      "get": {
+        "summary": "Собеседники с последним сообщением, сначала самые свежие",
+        "operationId": "MessagesService_ListDialogs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListDialogsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "MessagesService"
+        ]
+      }
+    },
+    "/api/v1/dialogs/{peerId}/messages": {
+      "get": {
+        "summary": "История диалога от новых к старым",
+        "operationId": "MessagesService_ListMessages",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListMessagesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "peerId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "beforeId",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "MessagesService"
+        ]
+      }
+    },
+    "/api/v1/messages": {
+      "post": {
+        "operationId": "MessagesService_SendMessage",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1SendMessageResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1SendMessageRequest"
+            }
+          }
+        ],
+        "tags": [
+          "MessagesService"
+        ]
+      }
+    },
+    "/api/v1/users/me": {
+      "get": {
+        "operationId": "UsersService_GetMe",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetMeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "UsersService"
+        ]
+      }
+    },
+    "/api/v1/users/search": {
+      "get": {
+        "operationId": "UsersService_SearchUsers",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1SearchUsersResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "UsersService"
+        ]
+      }
     }
   },
   "definitions": {
@@ -111,6 +286,54 @@
         }
       }
     },
+    "v1Dialog": {
+      "type": "object",
+      "properties": {
+        "peer": {
+          "$ref": "#/definitions/v1User"
+        },
+        "lastMessage": {
+          "$ref": "#/definitions/v1Message"
+        }
+      }
+    },
+    "v1GetMeResponse": {
+      "type": "object",
+      "properties": {
+        "user": {
+          "$ref": "#/definitions/v1User"
+        }
+      }
+    },
+    "v1ListDialogsResponse": {
+      "type": "object",
+      "properties": {
+        "dialogs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Dialog"
+          }
+        }
+      }
+    },
+    "v1ListMessagesResponse": {
+      "type": "object",
+      "properties": {
+        "messages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1Message"
+          }
+        },
+        "nextBeforeId": {
+          "type": "string",
+          "format": "int64",
+          "title": "не задан, если старше сообщений нет"
+        }
+      }
+    },
     "v1LoginRequest": {
       "type": "object",
       "properties": {
@@ -130,6 +353,30 @@
         },
         "accessToken": {
           "type": "string"
+        }
+      }
+    },
+    "v1Message": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "int64"
+        },
+        "senderId": {
+          "type": "string",
+          "format": "int64"
+        },
+        "recipientId": {
+          "type": "string",
+          "format": "int64"
+        },
+        "text": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
         }
       }
     },
@@ -156,6 +403,38 @@
       },
       "title": "после регистрации сразу отдаём токен — не нужно отдельно логиниться"
     },
+    "v1SearchUsersResponse": {
+      "type": "object",
+      "properties": {
+        "users": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/v1User"
+          }
+        }
+      }
+    },
+    "v1SendMessageRequest": {
+      "type": "object",
+      "properties": {
+        "recipientId": {
+          "type": "string",
+          "format": "int64"
+        },
+        "text": {
+          "type": "string"
+        }
+      }
+    },
+    "v1SendMessageResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "$ref": "#/definitions/v1Message"
+        }
+      }
+    },
     "v1User": {
       "type": "object",
       "properties": {
@@ -171,7 +450,7 @@
           "format": "date-time"
         }
       },
-      "description": "User — публичное представление пользователя.\nПароль и его хэш сюда никогда не попадают."
+      "description": "User — публичное представление пользователя."
     }
   }
 }

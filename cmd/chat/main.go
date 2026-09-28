@@ -16,6 +16,13 @@ import (
 	auth_postgres_repository "github.com/Rics69/rics-chat/internal/features/auth/repository/postgres"
 	auth_service "github.com/Rics69/rics-chat/internal/features/auth/service"
 	auth_transport_grpc "github.com/Rics69/rics-chat/internal/features/auth/transport/grpc"
+	messages_postgres_repository "github.com/Rics69/rics-chat/internal/features/messages/repository/postgres"
+	messages_service "github.com/Rics69/rics-chat/internal/features/messages/service"
+	messages_transport_grpc "github.com/Rics69/rics-chat/internal/features/messages/transport/grpc"
+	users_postgres_repository "github.com/Rics69/rics-chat/internal/features/users/repository/postgres"
+	users_service "github.com/Rics69/rics-chat/internal/features/users/service"
+	users_transport_grpc "github.com/Rics69/rics-chat/internal/features/users/transport/grpc"
+	chatv1 "github.com/Rics69/rics-chat/pkg/api/chat/v1"
 	rkboot "github.com/rookie-ninja/rk-boot/v2"
 	rkentry "github.com/rookie-ninja/rk-entry/v2/entry"
 	rkgrpc "github.com/rookie-ninja/rk-grpc/v2/boot"
@@ -64,6 +71,18 @@ func main() {
 	authService := auth_service.NewAuthService(authRepository, tokenManager)
 	authTransportGRPC := auth_transport_grpc.NewAuthGRPCHandler(authService)
 
+	logger.Debug("initializing feature", zap.String("feature", "users"))
+
+	usersRepository := users_postgres_repository.NewUsersRepository(pool)
+	usersService := users_service.NewUsersService(usersRepository)
+	usersTransportGRPC := users_transport_grpc.NewUsersGRPCHandler(usersService)
+
+	logger.Debug("initializing feature", zap.String("feature", "messages"))
+
+	messagesRepository := messages_postgres_repository.NewMessagesRepository(pool)
+	messagesService := messages_service.NewMessagesService(messagesRepository)
+	messagesTransportGRPC := messages_transport_grpc.NewMessagesGRPCHandler(messagesService)
+
 	logger.Debug("initializing rk-boot")
 
 	// embed FS нужно отдать rk до NewBoot — entries создаются прямо в нём
@@ -81,10 +100,21 @@ func main() {
 		core_grpc_interceptor.Logger(logger),
 		core_grpc_interceptor.Trace(),
 		core_grpc_interceptor.Panic(),
+		core_grpc_interceptor.Auth(
+			tokenManager,
+			chatv1.AuthService_Register_FullMethodName,
+			chatv1.AuthService_Login_FullMethodName,
+		),
 	)
 
 	grpcEntry.AddRegFuncGrpc(authTransportGRPC.RegisterGRPC)
 	grpcEntry.AddRegFuncGw(authTransportGRPC.RegisterGateway)
+
+	grpcEntry.AddRegFuncGrpc(usersTransportGRPC.RegisterGRPC)
+	grpcEntry.AddRegFuncGw(usersTransportGRPC.RegisterGateway)
+
+	grpcEntry.AddRegFuncGrpc(messagesTransportGRPC.RegisterGRPC)
+	grpcEntry.AddRegFuncGw(messagesTransportGRPC.RegisterGateway)
 
 	boot.Bootstrap(ctx)
 

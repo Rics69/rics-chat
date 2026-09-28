@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package chat.v1;
+
+import "chat/v1/user.proto";
+import "google/api/annotations.proto";
+
+option go_package = "github.com/Rics69/rics-chat/pkg/api/chat/v1;chatv1";
+
+service UsersService {
+  rpc GetMe(GetMeRequest) returns (GetMeResponse) {
+    option (google.api.http) = {get: "/api/v1/users/me"};
+  }
+
+  rpc SearchUsers(SearchUsersRequest) returns (SearchUsersResponse) {
+    option (google.api.http) = {get: "/api/v1/users/search"};
+  }
+}
+
+message GetMeRequest {}
+
+message GetMeResponse {
+  User user = 1;
+}
+
+message SearchUsersRequest {
+  string query = 1;
+  int32 limit = 2;
+}
+
+message SearchUsersResponse {
+  repeated User users = 1;
+}

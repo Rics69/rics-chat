@@ -23,7 +23,6 @@ const (
 )
 
 // User — публичное представление пользователя.
-// Пароль и его хэш сюда никогда не попадают.
 type User struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`

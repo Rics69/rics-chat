@@ -28,7 +28,6 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
 // AuthService — регистрация и вход.
-// Оба метода публичные (без токена), остальные сервисы будут требовать access_token.
 type AuthServiceClient interface {
 	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
 	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
@@ -67,7 +66,6 @@ func (c *authServiceClient) Login(ctx context.Context, in *LoginRequest, opts ..
 // for forward compatibility.
 //
 // AuthService — регистрация и вход.
-// Оба метода публичные (без токена), остальные сервисы будут требовать access_token.
 type AuthServiceServer interface {
 	Register(context.Context, *RegisterRequest) (*RegisterResponse, error)
 	Login(context.Context, *LoginRequest) (*LoginResponse, error)
