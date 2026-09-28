@@ -14,6 +14,9 @@ const (
 	pingPeriod     = pongWait * 9 / 10
 	maxMessageSize = 512
 	sendBufferSize = 64
+
+	// 4000-4999 — коды закрытия для приложений, клиент по нему понимает, что надо перелогиниться
+	closeCodeTokenExpired = 4001
 )
 
 type Client struct {
@@ -22,16 +25,25 @@ type Client struct {
 	userID int64
 	send   chan []byte
 
+	expiresAt time.Time
+
 	log *core_logger.Logger
 }
 
-func newClient(hub *Hub, conn *websocket.Conn, userID int64, log *core_logger.Logger) *Client {
+func newClient(
+	hub *Hub,
+	conn *websocket.Conn,
+	userID int64,
+	expiresAt time.Time,
+	log *core_logger.Logger,
+) *Client {
 	return &Client{
-		hub:    hub,
-		conn:   conn,
-		userID: userID,
-		send:   make(chan []byte, sendBufferSize),
-		log:    log,
+		hub:       hub,
+		conn:      conn,
+		userID:    userID,
+		send:      make(chan []byte, sendBufferSize),
+		expiresAt: expiresAt,
+		log:       log,
 	}
 }
 
@@ -65,8 +77,10 @@ func (c *Client) readPump() {
 // writePump — единственная горутина, которая пишет в conn: gorilla не поддерживает конкурентную запись
 func (c *Client) writePump() {
 	ticker := time.NewTicker(pingPeriod)
+	tokenExpired := time.NewTimer(time.Until(c.expiresAt))
 	defer func() {
 		ticker.Stop()
+		tokenExpired.Stop()
 		_ = c.conn.Close()
 	}()
 
@@ -84,6 +98,16 @@ func (c *Client) writePump() {
 				c.log.Debug("websocket write error", zap.Error(err))
 				return
 			}
+		case <-tokenExpired.C:
+			c.log.Debug("websocket token expired")
+
+			_ = c.conn.WriteControl(
+				websocket.CloseMessage,
+				websocket.FormatCloseMessage(closeCodeTokenExpired, "token expired"),
+				time.Now().Add(writeWait),
+			)
+
+			return
 		case <-ticker.C:
 			_ = c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 

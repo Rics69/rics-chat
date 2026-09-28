@@ -2,6 +2,7 @@ package core_ws
 
 import (
 	"net/http"
+	"time"
 
 	core_logger "github.com/Rics69/rics-chat/internal/core/logger"
 	"github.com/gorilla/websocket"
@@ -11,7 +12,7 @@ import (
 const tokenQueryParam = "token"
 
 type TokenParser interface {
-	ParseToken(token string) (int64, error)
+	ParseTokenWithExpiry(token string) (int64, time.Time, error)
 }
 
 // CheckOrigin не переопределяем: по умолчанию gorilla пускает только тот же Origin,
@@ -24,7 +25,7 @@ var upgrader = websocket.Upgrader{
 // Handler: браузерный WebSocket не умеет слать заголовки, поэтому токен идёт в ?token=
 func Handler(hub *Hub, tokenParser TokenParser, log *core_logger.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userID, err := tokenParser.ParseToken(r.URL.Query().Get(tokenQueryParam))
+		userID, expiresAt, err := tokenParser.ParseTokenWithExpiry(r.URL.Query().Get(tokenQueryParam))
 		if err != nil {
 			log.Debug("websocket unauthenticated", zap.Error(err))
 			http.Error(w, "unauthenticated", http.StatusUnauthorized)
@@ -40,7 +41,7 @@ func Handler(hub *Hub, tokenParser TokenParser, log *core_logger.Logger) http.Ha
 		}
 
 		clientLog := log.With(zap.Int64("user_id", userID))
-		client := newClient(hub, conn, userID, clientLog)
+		client := newClient(hub, conn, userID, expiresAt, clientLog)
 
 		if !hub.register(client) {
 			_ = conn.Close()

@@ -14,6 +14,8 @@ make proto-gen                # генерация pkg/api и api/openapi
 make chat-run
 ```
 
+Тесты: `make test` (unit, с `-race`, БД не нужна)
+
 - Фронт: http://localhost:8080/
 - WebSocket: ws://localhost:8080/ws?token=...
 - REST (gateway): http://localhost:8080/api/v1/...

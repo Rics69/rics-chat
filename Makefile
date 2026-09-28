@@ -80,6 +80,9 @@ chat-run:
 	go mod tidy && \
 	go run ${PROJECT_ROOT}/cmd/chat
 
+test:
+	@go test -race -count=1 ./...
+
 chat-deploy:
 	@docker compose up -d --build rics-chat
 

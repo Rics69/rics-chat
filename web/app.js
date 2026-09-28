@@ -336,9 +336,15 @@ function connectWS() {
     if (event.new_message) onNewMessage(event.new_message);
   };
 
-  ws.onclose = () => {
+  ws.onclose = (e) => {
     $("ws-status").classList.remove("online");
     if (state.wsStopped || state.ws !== ws) return;
+
+    // 4001 — сервер закрыл сокет, потому что истёк токен
+    if (e.code === 4001) {
+      logout();
+      return;
+    }
 
     // экспоненциальная задержка: 1, 2, 4, 8, 10, 10... секунд
     const delay = Math.min(1000 * 2 ** state.wsRetry, 10000);

@@ -39,6 +39,12 @@ func (m *TokenManager) NewToken(userID int64) (string, error) {
 }
 
 func (m *TokenManager) ParseToken(token string) (int64, error) {
+	userID, _, err := m.ParseTokenWithExpiry(token)
+
+	return userID, err
+}
+
+func (m *TokenManager) ParseTokenWithExpiry(token string) (int64, time.Time, error) {
 	var claims jwt.RegisteredClaims
 
 	// WithValidMethods обязателен: иначе можно подсунуть токен с alg=none
@@ -51,13 +57,13 @@ func (m *TokenManager) ParseToken(token string) (int64, error) {
 		jwt.WithExpirationRequired(),
 	)
 	if err != nil {
-		return 0, fmt.Errorf("parse token: %v: %w", err, core_errors.ErrUnauthenticated)
+		return 0, time.Time{}, fmt.Errorf("parse token: %v: %w", err, core_errors.ErrUnauthenticated)
 	}
 
 	userID, err := strconv.ParseInt(claims.Subject, 10, 64)
 	if err != nil {
-		return 0, fmt.Errorf("invalid token subject='%s': %w", claims.Subject, core_errors.ErrUnauthenticated)
+		return 0, time.Time{}, fmt.Errorf("invalid token subject='%s': %w", claims.Subject, core_errors.ErrUnauthenticated)
 	}
 
-	return userID, nil
+	return userID, claims.ExpiresAt.Time, nil
 }

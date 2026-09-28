@@ -13,6 +13,7 @@ import (
 	core_config "github.com/Rics69/rics-chat/internal/core/config"
 	core_logger "github.com/Rics69/rics-chat/internal/core/logger"
 	core_pgx_pool "github.com/Rics69/rics-chat/internal/core/repository/postgres/pool/pgx"
+	core_grpc_gateway "github.com/Rics69/rics-chat/internal/core/transport/grpc/gateway"
 	core_grpc_interceptor "github.com/Rics69/rics-chat/internal/core/transport/grpc/interceptor"
 	core_ws "github.com/Rics69/rics-chat/internal/core/transport/ws"
 	auth_postgres_repository "github.com/Rics69/rics-chat/internal/features/auth/repository/postgres"
@@ -27,6 +28,7 @@ import (
 	users_transport_grpc "github.com/Rics69/rics-chat/internal/features/users/transport/grpc"
 	chatv1 "github.com/Rics69/rics-chat/pkg/api/chat/v1"
 	"github.com/Rics69/rics-chat/web"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	rkboot "github.com/rookie-ninja/rk-boot/v2"
 	rkentry "github.com/rookie-ninja/rk-entry/v2/entry"
 	rkgrpc "github.com/rookie-ninja/rk-grpc/v2/boot"
@@ -101,6 +103,12 @@ func main() {
 	if grpcEntry == nil {
 		logger.Fatal("grpc entry not found in boot.yaml", zap.String("name", grpcEntryName))
 	}
+
+	// опции применяются по порядку, наша идёт после rk-шной и перекрывает её
+	grpcEntry.GwMuxOptions = append(
+		grpcEntry.GwMuxOptions,
+		runtime.WithErrorHandler(core_grpc_gateway.ErrorHandler),
+	)
 
 	grpcEntry.AddUnaryInterceptors(
 		core_grpc_interceptor.RequestID(),
