@@ -14,6 +14,8 @@ make proto-gen                # генерация pkg/api и api/openapi
 make chat-run
 ```
 
+- Фронт: http://localhost:8080/
+- WebSocket: ws://localhost:8080/ws?token=...
 - REST (gateway): http://localhost:8080/api/v1/...
 - gRPC: localhost:8080 (reflection включён, можно grpcurl)
 - Swagger: http://localhost:8080/sw/

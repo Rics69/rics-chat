@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>rics-chat</title>
+  <link rel="stylesheet" href="/web/style.css">
+</head>
+<body>
+  <section id="auth-screen" class="auth" hidden>
+    <form id="auth-form" class="auth-card">
+      <h1>rics-chat</h1>
+      <input id="auth-login" placeholder="логин" autocomplete="username" required>
+      <input id="auth-password" type="password" placeholder="пароль (от 8 символов)" autocomplete="current-password" required>
+      <div class="auth-buttons">
+        <button type="submit" data-action="login">Войти</button>
+        <button type="submit" data-action="register" class="secondary">Регистрация</button>
+      </div>
+      <p id="auth-error" class="error"></p>
+    </form>
+  </section>
+
+  <section id="chat-screen" class="chat" hidden>
+    <aside class="sidebar">
+      <header class="sidebar-header">
+        <span id="me-login" class="me"></span>
+        <span id="ws-status" class="ws-status" title="соединение"></span>
+        <button id="logout" class="link">выйти</button>
+      </header>
+      <input id="search" class="search" placeholder="Поиск по логину" autocomplete="off">
+      <ul id="search-results" class="list" hidden></ul>
+      <ul id="dialogs" class="list"></ul>
+    </aside>
+
+    <main class="conversation">
+      <div id="empty-state" class="empty">Выберите диалог или найдите собеседника</div>
+      <div id="conversation" class="conversation-inner" hidden>
+        <header class="conversation-header">
+          <button id="back" class="link back">←</button>
+          <span id="peer-login"></span>
+        </header>
+        <div id="messages" class="messages"></div>
+        <form id="send-form" class="send-form">
+          <input id="send-text" placeholder="Сообщение" autocomplete="off" maxlength="4096">
+          <button type="submit">➤</button>
+        </form>
+      </div>
+    </main>
+  </section>
+
+  <script src="/web/app.js"></script>
+</body>
+</html>

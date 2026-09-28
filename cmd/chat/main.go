@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
+	"net/http"
 	"os"
 	"time"
 
@@ -25,6 +26,7 @@ import (
 	users_service "github.com/Rics69/rics-chat/internal/features/users/service"
 	users_transport_grpc "github.com/Rics69/rics-chat/internal/features/users/transport/grpc"
 	chatv1 "github.com/Rics69/rics-chat/pkg/api/chat/v1"
+	"github.com/Rics69/rics-chat/web"
 	rkboot "github.com/rookie-ninja/rk-boot/v2"
 	rkentry "github.com/rookie-ninja/rk-entry/v2/entry"
 	rkgrpc "github.com/rookie-ninja/rk-grpc/v2/boot"
@@ -122,6 +124,10 @@ func main() {
 	grpcEntry.AddRegFuncGw(messagesTransportGRPC.RegisterGateway)
 
 	grpcEntry.HttpMux.Handle("/ws", core_ws.Handler(wsHub, tokenManager, logger))
+
+	// "/" уже занят gateway'ем; "GET /{$}" — только корень, он специфичнее и не конфликтует
+	grpcEntry.HttpMux.Handle("GET /{$}", http.FileServerFS(web.FS))
+	grpcEntry.HttpMux.Handle("GET /web/", http.StripPrefix("/web/", http.FileServerFS(web.FS)))
 
 	// hijack'нутые websocket-соединения http.Server.Shutdown не закрывает — закрываем сами
 	boot.AddShutdownHookFunc("websocket-hub", wsHub.Close)
