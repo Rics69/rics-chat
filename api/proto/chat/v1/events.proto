@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package chat.v1;
+
+import "chat/v1/messages.proto";
+
+option go_package = "github.com/Rics69/rics-chat/pkg/api/chat/v1;chatv1";
+
+// ServerEvent — то, что сервер присылает клиенту по WebSocket /ws
+message ServerEvent {
+  oneof event {
+    Message new_message = 1;
+  }
+}

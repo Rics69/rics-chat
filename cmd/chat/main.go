@@ -13,12 +13,14 @@ import (
 	core_logger "github.com/Rics69/rics-chat/internal/core/logger"
 	core_pgx_pool "github.com/Rics69/rics-chat/internal/core/repository/postgres/pool/pgx"
 	core_grpc_interceptor "github.com/Rics69/rics-chat/internal/core/transport/grpc/interceptor"
+	core_ws "github.com/Rics69/rics-chat/internal/core/transport/ws"
 	auth_postgres_repository "github.com/Rics69/rics-chat/internal/features/auth/repository/postgres"
 	auth_service "github.com/Rics69/rics-chat/internal/features/auth/service"
 	auth_transport_grpc "github.com/Rics69/rics-chat/internal/features/auth/transport/grpc"
 	messages_postgres_repository "github.com/Rics69/rics-chat/internal/features/messages/repository/postgres"
 	messages_service "github.com/Rics69/rics-chat/internal/features/messages/service"
 	messages_transport_grpc "github.com/Rics69/rics-chat/internal/features/messages/transport/grpc"
+	messages_transport_ws "github.com/Rics69/rics-chat/internal/features/messages/transport/ws"
 	users_postgres_repository "github.com/Rics69/rics-chat/internal/features/users/repository/postgres"
 	users_service "github.com/Rics69/rics-chat/internal/features/users/service"
 	users_transport_grpc "github.com/Rics69/rics-chat/internal/features/users/transport/grpc"
@@ -65,6 +67,8 @@ func main() {
 
 	tokenManager := core_jwt.NewTokenManager(core_jwt.NewConfigMust())
 
+	wsHub := core_ws.NewHub(logger)
+
 	logger.Debug("initializing feature", zap.String("feature", "auth"))
 
 	authRepository := auth_postgres_repository.NewAuthRepository(pool)
@@ -80,7 +84,8 @@ func main() {
 	logger.Debug("initializing feature", zap.String("feature", "messages"))
 
 	messagesRepository := messages_postgres_repository.NewMessagesRepository(pool)
-	messagesService := messages_service.NewMessagesService(messagesRepository)
+	messagesNotifier := messages_transport_ws.NewMessagesWSNotifier(wsHub)
+	messagesService := messages_service.NewMessagesService(messagesRepository, messagesNotifier)
 	messagesTransportGRPC := messages_transport_grpc.NewMessagesGRPCHandler(messagesService)
 
 	logger.Debug("initializing rk-boot")
@@ -115,6 +120,11 @@ func main() {
 
 	grpcEntry.AddRegFuncGrpc(messagesTransportGRPC.RegisterGRPC)
 	grpcEntry.AddRegFuncGw(messagesTransportGRPC.RegisterGateway)
+
+	grpcEntry.HttpMux.Handle("/ws", core_ws.Handler(wsHub, tokenManager, logger))
+
+	// hijack'нутые websocket-соединения http.Server.Shutdown не закрывает — закрываем сами
+	boot.AddShutdownHookFunc("websocket-hub", wsHub.Close)
 
 	boot.Bootstrap(ctx)
 

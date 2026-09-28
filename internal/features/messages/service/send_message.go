@@ -23,5 +23,8 @@ func (s *MessagesService) SendMessage(
 		return domain.Message{}, fmt.Errorf("create message: %w", err)
 	}
 
+	// только после успешной записи в БД: иначе клиент увидит сообщение, которого нет в истории
+	s.messagesNotifier.NotifyNewMessage(ctx, message)
+
 	return message, nil
 }

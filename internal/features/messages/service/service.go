@@ -10,6 +10,7 @@ import (
 
 type MessagesService struct {
 	messagesRepository MessagesRepository
+	messagesNotifier   MessagesNotifier
 }
 
 type MessagesRepository interface {
@@ -24,9 +25,17 @@ type MessagesRepository interface {
 	ListDialogs(ctx context.Context, userID int64, limit int) ([]domain.Dialog, error)
 }
 
-func NewMessagesService(messagesRepository MessagesRepository) *MessagesService {
+type MessagesNotifier interface {
+	NotifyNewMessage(ctx context.Context, message domain.Message)
+}
+
+func NewMessagesService(
+	messagesRepository MessagesRepository,
+	messagesNotifier MessagesNotifier,
+) *MessagesService {
 	return &MessagesService{
 		messagesRepository: messagesRepository,
+		messagesNotifier:   messagesNotifier,
 	}
 }
 
